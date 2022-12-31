@@ -1,6 +1,13 @@
 import { createContext, ReactNode, useReducer, useState } from "react"
 import TodoType from "../Types/TodoType"
 import { uid } from "uid"
+import { todosReducer } from "../reducers/todos/reducer"
+import {
+  ActionTypes,
+  addTodoAction,
+  checkTodoAction,
+  deleteTodoAction
+} from "../reducers/todos/actions"
 
 interface TodosContextType {
   todos: TodoType[] | undefined
@@ -17,33 +24,38 @@ interface TodosContextProviderProps {
 export const TodosContext = createContext({} as TodosContextType)
 
 export function TodosContextProvider({ children }: TodosContextProviderProps) {
-  const [todos, setTodos] = useState<TodoType[]>([])
+  const [todosState, dispatch] = useReducer(todosReducer, {
+    todos: []
+  })
+
+  const { todos } = todosState
 
   function addTodo(text: string) {
     const todo = { id: uid(), text, completed: false }
 
-    setTodos([...todos, todo])
+    dispatch(addTodoAction(todo))
   }
 
   function deleteTodo(id: string) {
-    const updatedTodos = todos.filter(todo => todo.id !== id)
+    const updatedTodos = todos.filter((todo: TodoType) => todo.id !== id)
 
-    setTodos(updatedTodos)
+    dispatch(deleteTodoAction(updatedTodos))
   }
 
   function checkTodo(checked: boolean, id: string) {
-    const completedTodos = todos.map(todo => {
+    const completedTodos = todos.map((todo: TodoType) => {
       if (todo.id == id) {
         todo.completed = checked
       }
 
       return todo
     })
-    setTodos(completedTodos)
+
+    dispatch(checkTodoAction(completedTodos))
   }
 
   function calcChecked() {
-    const completedTodos = todos.filter(todo => todo.completed).length
+    const completedTodos = todos.filter((todo: TodoType) => todo.completed).length
 
     return completedTodos
   }
